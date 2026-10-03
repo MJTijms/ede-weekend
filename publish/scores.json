@@ -1,16 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 4,
-  "updatedAt": "2026-10-03T14:43:37.377Z",
-  "results": {
-    "p1b1": {
-      "winner": 0,
-      "scores": [
-        5,
-        4
-      ],
-      "updatedAt": "2026-10-03T14:43:37.377Z"
-    }
-  },
+  "revision": 5,
+  "updatedAt": "2026-10-03T14:44:00.635Z",
+  "results": {},
   "behavior": []
 }
