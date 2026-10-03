@@ -1,14 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 2,
-  "updatedAt": "2026-10-03T14:43:14.762Z",
+  "revision": 3,
+  "updatedAt": "2026-10-03T14:43:18.185Z",
   "results": {},
-  "behavior": [
-    {
-      "id": "3c5bdd87-9adf-45f2-a485-44f96c4ad662",
-      "player": "Bofditch",
-      "delta": -1,
-      "at": "2026-10-03T14:43:14.751Z"
-    }
-  ]
+  "behavior": []
 }
