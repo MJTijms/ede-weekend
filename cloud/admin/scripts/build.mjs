@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-const root=process.cwd(),front=path.join(root,'frontend');
+import {existsSync} from 'node:fs';
+const root=process.cwd(),front=existsSync(path.join(root,'frontend'))?path.join(root,'frontend'):path.resolve(root,'../../publish');
 const assets={};
 for(const file of ['index.html','app.js','config.js','data.js','scoring.js','style.css','assets/ribbon.svg','assets/favicon.svg']){
  let content=await fs.readFile(path.join(front,file),'utf8');
