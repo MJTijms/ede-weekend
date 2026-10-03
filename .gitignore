@@ -1,0 +1,8 @@
+docs/
+.runtime/
+node_modules/
+*.log
+*.tmp
+.env
+.env.*
+Thumbs.db
