@@ -71,6 +71,6 @@ const server=http.createServer(async(req,res)=>{
   const content=await fs.readFile(target);res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin'});res.end(req.method==='HEAD'?undefined:content);
  }catch(e){send(res,e.code==='ENOENT'?404:400,{error:e.code==='ENOENT'?'Niet gevonden.':'Het verzoek kon niet worden verwerkt.'});}
 });
-server.listen(port,'127.0.0.1',()=>console.log(`EDE ${preview?'voorbeeld':'beheer'}: http://127.0.0.1:${port}/`));
+server.listen(port,'127.0.0.1',()=>{const url=`http://127.0.0.1:${port}/`;console.log(`EDE ${preview?'voorbeeld':'beheer'}: ${url}`);if(process.argv.includes('--open')&&process.platform==='win32')execFile('rundll32',['url.dll,FileProtocolHandler',url]);});
 // On restart, retry a locally saved score that was not pushed while offline.
 if(!preview){try{const {stdout}=await git(['show','origin/main:publish/scores.json']);publishedRevision=JSON.parse(stdout).revision;if(state.revision>publishedRevision)queuePublish();}catch{publishedRevision=-1;}}

@@ -2,6 +2,10 @@
 
 De openbare app bevat het programma, de paklijst, de twee speelschema’s en het klassement. Alleen de bijnamen zijn opgenomen.
 
+Openbare app: https://mjtijms.github.io/ede-weekend/
+
+Broncode: https://github.com/MJTijms/ede-weekend
+
 ## Beheren
 
 Dubbelklik op **Start EDE.cmd**. Laat het venster open zolang je uitslagen invoert. De beheerapp draait op je eigen laptop via `http://127.0.0.1:4173/`; de openbare app bevat geen beheerknoppen of wachtwoorden.
