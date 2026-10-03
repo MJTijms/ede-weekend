@@ -8,17 +8,22 @@ Broncode: https://github.com/MJTijms/ede-weekend
 
 ## Beheren
 
-Dubbelklik op **Start EDE.cmd**. Laat het venster open zolang je uitslagen invoert. De beheerapp draait op je eigen laptop via `http://127.0.0.1:4173/`; de openbare app bevat geen beheerknoppen of wachtwoorden.
+Open **https://ede-weekend-beheer.mark-tijms.chatgpt.site/** op je telefoon of laptop en log in met hetzelfde ChatGPT-account waarmee de app is gemaakt. De beheerpagina is privé. De knop **Beheer** in de openbare app brengt je naar deze pagina. Je kunt de beheerpagina ook toevoegen aan het beginscherm van je telefoon.
+
+**Start EDE.cmd** opent voortaan dezelfde online beheerpagina. Er draait geen lokale server meer voor normale invoer; de laptop kan uit blijven.
 
 Een overwinning levert elke speler van het winnende team 1 punt op. Andere teams en gelijke uitslagen krijgen 0. Gedrag geeft +1 of −1. Correcties vervangen de eerdere uitslag.
 
-Uitslagen worden direct op de laptop opgeslagen. Bij internetverbinding publiceert de beheerapp wijzigingen automatisch op GitHub. GitHub Pages heeft vervolgens doorgaans even nodig om de openbare stand bij te werken. De openbare app ververst de stand elke 30 seconden. Bij een mislukte publicatie blijven de lokale uitslagen bewaard en verschijnt een knop om opnieuw online bij te werken. GitHub moet op deze laptop aangemeld blijven.
+Uitslagen staan in gedeelde online opslag. De openbare app haalt de stand elke 30 seconden op; beheer ververs je iedere 5 seconden. Voor invoeren is internet nodig. Als opslaan mislukt, meldt de app dit. Een oudere telefoon- of laptopsessie kan geen nieuwere stand overschrijven.
+
+De openbare route kan uitsluitend scores lezen. De beheerpagina controleert op iedere wijziging je ingelogde identiteit en de herkomst van het verzoek. De app vraagt geen bestandsrechten, OneDrive-toegang of toegang tot andere accounts. Servergeheimen worden uitsluitend in de hostingomgeving opgeslagen, nooit in GitHub of browsercode.
 
 ## Project
 
-- `publish/`: openbare GitHub Pages-app en actuele stand.
-- `scripts/server.mjs`: lokale beheerapp. Geen gegevens van de laptop worden als server aangeboden.
+- `publish/`: openbare GitHub Pages-app; `scores.json` is alleen de bewaarde stand van vóór de cloudmigratie.
+- `cloud/`: broncode van de privébeheerapp en de openbare leesroute. Deployments worden met de Sites-workflow beheerd.
+- `scripts/server.mjs`: opent de online beheerpagina; alleen de testmodus biedt nog een lokale server.
 - `tests/`: controles voor speelschema’s, puntentelling, opslag en toegang.
 - `docs/`: lokale projectstatus; wordt niet gepubliceerd.
 
-`npm test` controleert de kernfuncties. `npm run preview` opent een lokale versie zonder naar GitHub te schrijven; voor testuitslagen gebruik je een apart bestand via `EDE_DATA_FILE`.
+`npm test` controleert de kernfuncties. De cloudtests gebruiken tijdelijke testdatabases. Testuitslagen worden nooit naar de echte weekendopslag geschreven.

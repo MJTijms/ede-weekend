@@ -1,11 +1,12 @@
 import {PLAYERS,GAMES,PADEL,MATCHES,PACKING,PLANNING} from './data.js';
 import {emptyState,validateState,standings,resultFrom} from './scoring.js';
+import {CLOUD} from './config.js';
 const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={trophy:'M8 21h8M12 17v4M7 3h10v7a5 5 0 0 1-10 0V3ZM7 5H4v3a4 4 0 0 0 4 4M17 5h3v3a4 4 0 0 1-4 4',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2',bag:'M5 6h14l1 15H4L5 6ZM9 6V4a3 3 0 0 1 6 0v2M9 11h6',dice:'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 7h.01M17 7h.01M12 12h.01M7 17h.01M17 17h.01',padel:'M16 3a6 8 35 1 0 0 14 6 8 35 1 0 0-14ZM7 17l-4 5M6 19l2 2M12 6h.01M16 8h.01M11 10h.01M15 12h.01',heart:'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',check:'m5 12 4 4L19 6',arrow:'M7 17 17 7M7 7h10v10',edit:'m14 4 6 6M4 20l4-1L21 6l-4-4L4 15v5Z',info:'M12 10v7M12 7h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',music:'M9 18V5l12-2v13M9 8l12-2M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3M21 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3',chat:'M21 11a8 8 0 0 1-8 8H4l-3 3V9a8 8 0 0 1 8-8h4a8 8 0 0 1 8 8Z',spy:'M4 10h16M8 10l2-7h4l2 7M5 15a3 3 0 1 0 6 0H5ZM13 15a3 3 0 1 0 6 0h-6ZM11 15h2'};
 const icon=name=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.info}"/></svg>`;
 const views=[['klassement','Klassement','trophy'],['planning','Planning','calendar'],['paklijst','Paklijst','bag'],['game-night','Game Night','dice'],['padel','Padel','padel'],['gedrag','Gedrag','heart']];
-let state=emptyState(),editable=false,csrf='',mode='public',rounds={'game-night':0,padel:0},busy=false,saveError='',publishError='',pending=false,currentMatch=null,selectedWinner=null,toastTimer;
+let state=emptyState(),editable=false,csrf='',mode='public',signedIn=false,loginURL='',logoutURL='',rounds={'game-night':0,padel:0},busy=false,saveError='',publishError='',pending=false,currentMatch=null,selectedWinner=null,toastTimer;
 const currentView=()=>views.some(v=>v[0]===location.hash.slice(1))?location.hash.slice(1):'klassement';
 const initials=name=>name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
 const signed=n=>n>0?`+${n}`:n;
@@ -16,7 +17,7 @@ function toast(message,undo) {
 }
 function connection() {
  const label=$('#connection');label.className='connection'+(saveError||publishError?' error':' good');
- label.textContent=busy?'Opslaan…':saveError?'Opslaan mislukt':publishError?'Online bijwerken mislukt':editable?mode==='preview'?'Voorbeeld · lokaal':pending?'Opgeslagen · online bijwerken…':'Beheerder · opgeslagen':state.updatedAt?'Openbare stand · bijgewerkt':'Openbare stand';
+ label.textContent=busy?'Opslaan…':saveError?'Opslaan mislukt':publishError?'Online bijwerken mislukt':editable?mode==='preview'?'Voorbeeld · lokaal':pending?'Opgeslagen · online bijwerken…':mode==='cloud'?'Beheerder · online opgeslagen':'Beheerder · opgeslagen':state.updatedAt?'Openbare stand · bijgewerkt':'Openbare stand';
 }
 const hero=(eyebrow,title,description)=>`<section class="hero"><div class="hero-content"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p class="description">${description}</p></div></section>`;
 const fileLink=(file,label='Origineel als PNG')=>`<div class="page-end"><a class="asset-link" href="assets/${file}.png" download="EDE-${file}.png">${label} ${icon('arrow')}</a></div>`;
@@ -45,6 +46,8 @@ function render() {
  const view=currentView();$('#navigation').innerHTML=views.map(([id,label,i])=>`<a class="nav-link ${id===view?'active':''}" href="#${id}" ${id===view?'aria-current="page"':''}>${icon(i)}${label}</a>`).join('');
  $('#main').innerHTML=(saveError?`<div class="admin-warning" role="alert">${escape(saveError)} <button class="quiet-button" id="reload-state">Opnieuw laden</button></div>`:'')+(publishError?`<div class="admin-warning" role="alert">Lokaal opgeslagen; online bijwerken is mislukt. <button class="quiet-button" id="retry-publish">Opnieuw online bijwerken</button></div>`:'')+(view==='klassement'?leaderboard():view==='planning'?planningPage():view==='paklijst'?packingPage():view==='gedrag'?behaviorPage():schedule(view));
  document.title=`${views.find(v=>v[0]===view)[1]} · EDE`;
+ const access=$('#account-access');if(access){access.innerHTML=mode==='cloud'&&signedIn?`<a href="${logoutURL}" target="_top">${editable?'Uitloggen':'Wissel account'}</a>`:CLOUD.adminUrl?`<a href="${loginURL||CLOUD.adminUrl+'signin-with-chatgpt?return_to=%2F'}" target="_top">${icon('edit')} Beheer</a>`:'';}
+ if(mode==='cloud'&&signedIn&&!editable)$('#main').insertAdjacentHTML('afterbegin','<div class="admin-warning">Dit ChatGPT-account heeft geen beheertoegang. Gebruik het account waarmee de app is gemaakt.</div>');
  document.querySelectorAll('[data-round]').forEach(b=>b.onclick=()=>{rounds[view]=Number(b.dataset.round);render();});
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openMatch(b.dataset.edit));
  document.querySelectorAll('[data-behavior]').forEach(b=>b.onclick=()=>changeBehavior(b.dataset.player,Number(b.dataset.behavior)));
@@ -81,15 +84,15 @@ async function retryPublish() {try{const response=await fetch('api/publish',{met
 async function loadState(force=false) {
  if(busy||$('#result-dialog').open&&!force)return;
  try {
-  const response=await fetch(editable?'api/state':`scores.json?version=${Date.now()}`,{cache:'no-store'});
+  const response=await fetch(editable?'api/state':CLOUD.storageUrl?`${CLOUD.storageUrl}?version=${Date.now()}`:`scores.json?version=${Date.now()}`,{cache:'no-store',credentials:editable?'same-origin':'omit'});
   if(!response.ok)throw Error('De stand kon niet worden geladen.');
   const payload=await response.json(),next=validateState(editable?payload.state:payload);
   if(force||next.revision>=state.revision){state=next;saveError='';if(editable){publishError=payload.publishError||'';pending=payload.pending;}render();}
  }catch(e){saveError='De stand kan momenteel niet worden geladen. Probeer opnieuw.';render();}
 }
 async function init() {
- const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname);
- if(local)try{const r=await fetch('api/session',{cache:'no-store'});if(r.ok){const session=await r.json();editable=session.editable===true;csrf=session.csrf;mode=session.mode;}}catch{}
+ const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname),cloudHost=CLOUD.adminUrl&&location.origin===new URL(CLOUD.adminUrl).origin;
+ if(cloudHost||local&&!CLOUD.adminUrl)try{const r=await fetch('api/session',{cache:'no-store'});if(r.ok){const session=await r.json();editable=session.editable===true;csrf=session.csrf;mode=session.mode;signedIn=session.signedIn===true;loginURL=session.loginURL||'';logoutURL=session.logoutURL||'';}}catch{}
  await loadState(true);
  setInterval(()=>loadState(),editable?5000:30000);
 }

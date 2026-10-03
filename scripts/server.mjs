@@ -6,6 +6,12 @@ import {fileURLToPath} from 'node:url';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {validateState,emptyState} from '../publish/scoring.js';
+import {CLOUD} from '../publish/config.js';
+if(CLOUD.adminUrl&&!process.argv.includes('--preview')){
+ console.log('EDE-beheer gebruikt nu gedeelde online opslag: '+CLOUD.adminUrl);
+ if(process.argv.includes('--open')&&process.platform==='win32')execFile('rundll32',['url.dll,FileProtocolHandler',CLOUD.adminUrl]);
+ process.exit(0);
+}
 const exec=promisify(execFile),root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),webroot=path.join(root,'publish');
 const git=(args,options={})=>exec('git',['-c',`safe.directory=${root.replaceAll('\\','/')}`,'-C',webroot,...args],options);
 const preview=process.argv.includes('--preview'),port=Number(process.env.EDE_PORT||4173),datafile=process.env.EDE_DATA_FILE||path.join(preview?path.join(root,'.runtime'):webroot,preview?'preview-scores.json':'scores.json');
